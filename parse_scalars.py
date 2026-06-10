@@ -2,7 +2,7 @@
 
 from graphql import build_client_schema, GraphQLScalarType, is_specified_scalar_type
 import json
-import sys
+from utils import load_json_file
 
 def get_custom_scalars(introspection_resp):
 
@@ -15,27 +15,6 @@ def get_custom_scalars(introspection_resp):
 
     return custom_scalars
 
-def load_file():
-
-    if len(sys.argv) < 2:
-        print("Error: Please provide the path to the JSON file.")
-        print("Usage: python script.py <path_to_file.json>")
-        sys.exit(1)
-
-    file_path = sys.argv[1]
-
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            introspection_data = json.load(file)
-
-        return introspection_data
-
-    except FileNotFoundError:
-        print(f"Error: The file '{file_path}' was not found.")
-        sys.exit(1)
-    except json.JSONDecodeError:
-        print(f"Error: '{file_path}' is not a valid JSON file.")
-        sys.exit(1)
 
 def export_json(scalars_list):
     scalars_dict = {scalar: None for scalar in scalars_list}
@@ -50,7 +29,7 @@ def export_json(scalars_list):
 
 
 def main():
-    introspection_data = load_file()
+    introspection_data = load_json_file()
     custom_scalars = get_custom_scalars(introspection_data)
     export_json(custom_scalars)
 

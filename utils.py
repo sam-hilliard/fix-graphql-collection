@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+
+import sys
+import json
+
+def load_json_file():
+
+    if len(sys.argv) < 2:
+        print("Error: Please provide the path to the JSON file.")
+        print(f"Usage: python {sys.argv[0]} <path_to_file.json>")
+        sys.exit(1)
+
+    file_path = sys.argv[1]
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            introspection_data = json.load(file)
+
+        return introspection_data
+
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print(f"Error: '{file_path}' is not a valid JSON file.")
+        sys.exit(1)
