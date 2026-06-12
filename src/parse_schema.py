@@ -2,7 +2,7 @@
 
 from graphql import build_client_schema, GraphQLScalarType, is_specified_scalar_type
 import json
-from utils import load_json_file, export_json_to_file
+from .utils import load_json_file, export_json_to_file
 
 def get_custom_scalars(introspection_resp):
 
