@@ -9,3 +9,5 @@ build
 htmlcov
 
 custom_scalars.json
+.coverage
+.venv
