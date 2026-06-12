@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import json
-from utils import load_json_file
+from .utils import load_json_file
 
 
 def get_graphql_request(items):
