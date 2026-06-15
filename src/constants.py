@@ -4,10 +4,10 @@ from typing import Any, Dict
 
 GRAPHQL_SCALARS: Dict[str, Any] = {
     "String": "placeholder_text",
-    "Int": 1,
-    "Float": 1.0,
+    "Int": 0,
+    "Float": 0.0,
     "Boolean": False,
-    "ID": "40003000-0020-0010-0080-007000000000",
+    "ID": "00003000-0000-0000-0000-000000000000",
     "DateTime": "2026-01-01T00:00:00Z",
     "Email": "user@example.com",
     "URL": "https://example.com",
