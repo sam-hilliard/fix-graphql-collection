@@ -1,42 +1,68 @@
+#!/usr/bin/env python3
+
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from graphql import GraphQLScalarType, GraphQLObjectType
 import src.parse_schema as ps
 
-# TESTS FOR get_custom_scalars()
-
-def test_get_custom_scalars_filters_correctly(monkeypatch):
-    # Create simple mock instances that pass isinstance(obj, GraphQLScalarType)
+@patch("src.parse_schema.is_specified_scalar_type")
+@patch("src.parse_schema.build_client_schema")
+def test_get_custom_scalars_filters_correctly(mock_build_schema, mock_is_specified):
+    """Test that built-in scalars and object types are filtered out, leaving only custom scalars."""
     custom_scalar_1 = MagicMock(spec=GraphQLScalarType)
+    custom_scalar_1.__class__ = GraphQLScalarType
     custom_scalar_1.name = "DateTime"
 
     custom_scalar_2 = MagicMock(spec=GraphQLScalarType)
+    custom_scalar_2.__class__ = GraphQLScalarType
     custom_scalar_2.name = "UUID"
 
     builtin_scalar = MagicMock(spec=GraphQLScalarType)
+    builtin_scalar.__class__ = GraphQLScalarType
     builtin_scalar.name = "String"
 
     object_type = MagicMock(spec=GraphQLObjectType)
+    object_type.__class__ = GraphQLObjectType
     object_type.name = "User"
 
+    # 2. Build the mock schema structure
     mock_schema = MagicMock()
     mock_schema.type_map = {
         "DateTime": custom_scalar_1,
         "UUID": custom_scalar_2,
         "String": builtin_scalar,
-        "User": object_type
+        "User": object_type,
     }
-    monkeypatch.setattr(ps, "build_client_schema", lambda data: mock_schema)
+    mock_build_schema.return_value = mock_schema
 
-    def mock_is_specified(type_obj):
-        return type_obj.name == "String"
-    monkeypatch.setattr(ps, "is_specified_scalar_type", mock_is_specified)
+    mock_is_specified.side_effect = lambda type_obj: type_obj.name == "String"
 
     dummy_introspection = {"data": {"__schema": {}}}
+
     result = ps.get_custom_scalars(dummy_introspection)
 
-    assert len(result) == 2
-    assert "DateTime" in result
-    assert "UUID" in result
-    assert "String" not in result
-    assert "User" not in result
+    assert result == ["DateTime", "UUID"]
+    mock_build_schema.assert_called_once_with(dummy_introspection["data"])
+
+
+@patch("src.parse_schema.build_client_schema")
+def test_get_required_vars_extracts_non_null_variables(mock_build_schema):
+    """Test that variables with exclamation marks and no defaults are correctly captured."""
+
+    mock_build_schema.return_value = MagicMock()
+
+    introspection_data = {"data": {"__schema": {}}}
+
+    payload = {
+        "query": """
+            query GetUser($id: ID!, $limit: Int = 10) {
+                user(id: $id) {
+                    name
+                }
+            }
+        """
+    }
+
+    result = ps.get_required_vars(introspection_data, payload)
+
+    assert result == {"id": "ID!"}

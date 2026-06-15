@@ -4,7 +4,7 @@
 Parses introspection query response JSON
 """
 
-from graphql import build_client_schema, GraphQLScalarType, is_specified_scalar_type, parse, Visitor, ValidationContext
+from graphql import build_client_schema, GraphQLScalarType, is_specified_scalar_type, parse, Visitor, ValidationContext, visit
 from graphql.language.ast import VariableDefinitionNode, NonNullTypeNode, NamedTypeNode
 import json
 
@@ -46,6 +46,6 @@ def get_required_vars(introspection_resp, graphql_payload):
                 if node.default_value is None:
                     required_vars[var_name] = f"{var_type}!"
 
-    visitor.visit(ast, VariableVisitor())
+    visit(ast, VariableVisitor())
 
     return required_vars
