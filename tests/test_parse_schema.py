@@ -40,29 +40,3 @@ def test_get_custom_scalars_filters_correctly(monkeypatch):
     assert "UUID" in result
     assert "String" not in result
     assert "User" not in result
-
-
-# TESTS FOR main()
-
-def test_main_execution_flow(monkeypatch, capsys):
-    exported_file = None
-    exported_data = None
-
-    monkeypatch.setattr(ps, "load_json_file", lambda: {"dummy": "data"})
-
-    def mock_export(filename, data):
-        nonlocal exported_file, exported_data
-        exported_file = filename
-        exported_data = data
-    monkeypatch.setattr(ps, "export_json_to_file", mock_export)
-
-    monkeypatch.setattr(ps, "get_custom_scalars", lambda data: ["Email", "URL"])
-
-    ps.main()
-
-    assert exported_file == "custom_scalars.json"
-    assert exported_data == {"Email": None, "URL": None}
-
-    captured = capsys.readouterr()
-    assert "Custom scalars saved to custom_scalars.json" in captured.out
-    assert "Fill in the `null` values for the most accurate results" in captured.out

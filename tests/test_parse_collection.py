@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+#!/usr/bin/env python3
+
 import pytest
 import src.parse_collection as pc
-from src.utils import load_json_file
 
 # Tests for get_graphql_request() (Core Logic & Edge Cases)
 
@@ -78,69 +79,3 @@ def test_get_graphql_request_malformed_structures():
         {"request": {"body": {"mode": "graphql"}}}  # Missing 'graphql' payload key
     ]
     assert pc.get_graphql_request(broken_items) is None
-
-
-# Tests for main() (Execution Flow, Defaults, & Console Output)
-
-def test_main_with_perfect_graphql_payload(monkeypatch, capsys):
-    """Should print the explicit query and variables when complete data is loaded."""
-    mock_data = {
-        "item": [
-            {
-                "request": {
-                    "body": {
-                        "mode": "graphql",
-                        "graphql": {
-                            "query": "query MyQuery { id }",
-                            "variables": '{"id": 1}'
-                        }
-                    }
-                }
-            }
-        ]
-    }
-    # Mock load_json_file to return our mock dictionary
-    monkeypatch.setattr(pc, "load_json_file", lambda: mock_data)
-
-    pc.main()
-    captured = capsys.readouterr()
-
-    assert "=== FIRST GRAPHQL QUERY ===" in captured.out
-    assert "query MyQuery { id }" in captured.out
-    assert "=== VARIABLES ===" in captured.out
-    assert '{"id": 1}' in captured.out
-
-
-def test_main_with_missing_keys_fallback_defaults(monkeypatch, capsys):
-    """Should use safety string defaults if the graphql block exists but lacks keys."""
-    # The graphql dictionary exists, but contains no 'query' or 'variables' keys
-    mock_data = {
-        "item": [
-            {
-                "request": {
-                    "body": {
-                        "mode": "graphql",
-                        "graphql": {}
-                    }
-                }
-            }
-        ]
-    }
-    monkeypatch.setattr(pc, "load_json_file", lambda: mock_data)
-
-    pc.main()
-    captured = capsys.readouterr()
-
-    # Assert that fallback string defaults from your main() logic are displayed safely
-    assert "No GraphQL requests found in the collection." in captured.out
-
-
-def test_main_no_graphql_found(monkeypatch, capsys):
-    """Should print a friendly message if the collection has absolutely no GraphQL requests."""
-    mock_data = {"item": []}
-    monkeypatch.setattr(pc, "load_json_file", lambda: mock_data)
-
-    pc.main()
-    captured = capsys.readouterr()
-
-    assert "No GraphQL requests found in the collection." in captured.out

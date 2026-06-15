@@ -3,10 +3,10 @@
 import sys
 import json
 
-def load_json_file():
+def load_introspective_json():
 
     if len(sys.argv) < 2:
-        print("Error: Please provide the path to the JSON file.")
+        print("Error: Please provide the path to the introspective JSON file.")
         print(f"Usage: python {sys.argv[0]} <path_to_file.json>")
         sys.exit(1)
 
