@@ -21,10 +21,9 @@ def get_custom_scalars(introspection_resp):
 
 def get_required_vars(introspection_resp, graphql_payload):
     schema = build_client_schema(introspection_resp["data"])
-    query_string = graphql_payload.get('query', '')
 
     try:
-        ast = parse(query_string)
+        ast = parse(graphql_payload)
     except Exception as e:
         raise ValueError(f"Invalid GraphQL query string: {e}")
 
