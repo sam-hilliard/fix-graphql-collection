@@ -2,9 +2,9 @@
 
 import sys
 from pathlib import Path
-from utils import load_introspective_json, export_json_to_file
-from parse_schema import get_custom_scalars
-from parse_collection import repair_collection
+from src.utils import load_introspective_json, export_json_to_file
+from src.parse_schema import get_custom_scalars
+from src.parse_collection import repair_collection
 
 def output_custom_scalars(introspection_resp):
     custom_scalars = get_custom_scalars(introspection_resp)
