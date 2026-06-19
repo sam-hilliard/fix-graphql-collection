@@ -13,6 +13,8 @@ from graphql import (
     GraphQLString,
     GraphQLInt,
     GraphQLList,
+    GraphQLEnumType,
+    GraphQLSchema
 )
 
 import src.parse_collection as pc
@@ -331,3 +333,69 @@ def test_repair_collection_e2e_flow():
             "r",
             encoding="utf-8",
         )
+
+def test_repair_vars_enum():
+    """Should generate a valid value for required enum input fields."""
+
+    mock_req = {
+        "query": """
+            mutation createSkill ($skill: CreateSkillInput!) {
+                createSkill(skill: $skill) {
+                    id
+                }
+            }
+        """,
+        "variables": "{}",
+    }
+
+    skill_category = GraphQLEnumType(
+        "SkillCategory",
+        {
+            "TECHNICAL": {},
+            "BEHAVIOURAL": {},
+        },
+    )
+
+    schema = MagicMock()
+
+    schema.get_type.side_effect = {
+        "SkillCategory": skill_category,
+    }.get
+
+    with patch(
+        "src.parse_collection.get_graphql_request",
+        return_value=mock_req,
+    ), \
+    patch(
+        "src.parse_collection.pc.get_required_vars",
+        return_value={
+            "category": "SkillCategory",
+        },
+    ), \
+    patch(
+        "src.parse_collection.build_client_schema",
+        return_value=schema,
+    ), \
+    patch(
+        "src.parse_collection.import_json_from_file",
+        return_value={},
+    ):
+
+        result = pc.repair_vars(
+            {"data": {}},
+            {
+                "request": {
+                    "body": {
+                        "graphql": {}
+                    }
+                }
+            },
+        )
+
+        variables = json.loads(
+            result["request"]["body"]["graphql"]["variables"]
+        )
+
+        assert variables == {
+            "category": "TECHNICAL"
+        }

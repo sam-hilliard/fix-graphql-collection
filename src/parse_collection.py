@@ -15,6 +15,7 @@ from graphql import (
     GraphQLString,
     GraphQLInt,
     GraphQLList,
+    GraphQLEnumType
 )
 
 def get_graphql_request(item):
@@ -54,6 +55,10 @@ def generate_sample_value(gql_type, scalar_mappings, seen=None):
                 seen,
             )
         ]
+
+    # custom enum
+    if isinstance(gql_type, GraphQLEnumType):
+        return next(iter(gql_type.values))
 
     # scalar / custom scalar
     if isinstance(gql_type, GraphQLScalarType):
