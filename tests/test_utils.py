@@ -3,57 +3,88 @@
 import json
 import pytest
 import sys
-from src.utils import load_introspective_json, export_json_to_file
+from src.utils import import_json_from_file, export_json_to_file
 
-# Load JSON Tests
+# Import JSON tests
 
-def test_load_introspective_json_missing_argument(monkeypatch):
-    """Test that the script exits if no file argument is passed."""
-    # Simulate running the script with NO arguments: ['json_utils.py']
-    monkeypatch.setattr(sys, "argv", ["json_utils.py"])
+def test_import_json_from_file_success(tmp_path):
+    """Test that valid JSON is loaded and returned as Python data."""
 
-    # Assert that sys.exit(1) is raised
-    with pytest.raises(SystemExit) as exc_info:
-        load_introspective_json()
-    assert exc_info.value.code == 1
+    input_file = tmp_path / "input.json"
 
+    data = {
+        "user": "alice",
+        "active": True,
+        "roles": ["admin"],
+    }
 
-def test_load_introspective_json_success(monkeypatch, tmp_path):
-    """Test successful JSON loading using a temporary file."""
-    dummy_data = {"status": "success", "items":[]}
-    test_file = tmp_path / "valid.json"
-    test_file.write_text(json.dumps(dummy_data))
+    with open(input_file, "w", encoding="utf-8") as f:
+        json.dump(data, f)
 
-    monkeypatch.setattr(sys, "argv", ["json_utils.py", str(test_file)])
+    result = import_json_from_file(str(input_file))
 
-    result = load_introspective_json()
-    assert result == dummy_data
+    assert result == data
 
 
-def test_load_introspective_json_not_found(monkeypatch):
-    """Test that the script exits safely if the file does not exist."""
-    # Simulate targeting a nonexistent file
-    monkeypatch.setattr(sys, "argv", ["json_utils.py", "fake_file.json"])
+def test_import_json_from_file_missing_file(tmp_path, capsys):
+    """Test that missing files print an error and exit."""
 
-    with pytest.raises(SystemExit) as exc_info:
-        load_introspective_json()
-    assert exc_info.value.code == 1
+    missing_file = tmp_path / "does_not_exist.json"
+
+    with pytest.raises(SystemExit) as exc:
+        import_json_from_file(str(missing_file))
+
+    assert exc.value.code == 1
+
+    captured = capsys.readouterr()
+    assert "was not found" in captured.out
 
 
-def test_load_introspective_json_invalid_json(monkeypatch, tmp_path):
-    """Test that the script catches malformed/broken JSON syntax."""
-    # Create a file with broken JSON syntax
-    test_file = tmp_path / "broken.json"
-    test_file.write_text("{ broken javascript object literal }")
+def test_import_json_from_file_invalid_json(tmp_path, capsys):
+    """Test that malformed JSON prints an error and exits."""
 
-    monkeypatch.setattr(sys, "argv", ["json_utils.py", str(test_file)])
+    bad_file = tmp_path / "invalid.json"
 
-    with pytest.raises(SystemExit) as exc_info:
-        load_introspective_json()
-    assert exc_info.value.code == 1
+    bad_file.write_text(
+        "{ invalid json }",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        import_json_from_file(str(bad_file))
+
+    assert exc.value.code == 1
+
+    captured = capsys.readouterr()
+    assert "is not a valid JSON file" in captured.out
 
 
 # Export JSON tests
+
+def test_export_json_to_file(tmp_path):
+    """Test that dictionary data is successfully written to a JSON file."""
+
+    output_file = tmp_path / "output.json"
+    data_to_export = {
+        "user": "alice",
+        "active": True,
+    }
+
+    export_json_to_file(
+        str(output_file),
+        data_to_export,
+    )
+
+    assert output_file.exists()
+
+    with open(
+        output_file,
+        "r",
+        encoding="utf-8",
+    ) as f:
+        saved_data = json.load(f)
+
+    assert saved_data == data_to_export
 
 def test_export_json_to_file(tmp_path):
     """Test that dictionary data is successfully written to a JSON file."""
